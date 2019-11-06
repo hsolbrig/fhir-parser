@@ -1,5 +1,5 @@
 # These are settings for the FHIR class generator.
-# All paths are relative to the `fhir-parser` directory. You can use '/' to
+# All paths are relative to the `fhirparser` directory. You can use '/' to
 # indicate directories: the parser will split them on '/' and use os.path to
 # make them platform independent.
 

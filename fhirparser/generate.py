@@ -16,7 +16,7 @@ def genargs() -> ArgumentParser:
 
     :return: parser
     """
-    parser = ArgumentParser(prog="fhir-parser")
+    parser = ArgumentParser(prog="fhirparser")
     parser.add_argument("settings", help="Location of the settings file. Default is settings.py",
                         default="settings.py")
     parser.add_argument("-f", "--force", help="Force download of the spec", action="store_true")
