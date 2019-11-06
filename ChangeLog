@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+v0.2.0
+------
+
+* Refactored to function as an installable package
 * Fixes when creating custom modules. Fix comment line breaking. #26
 * Fixes when creating custom modules. Fix comment line breaking
 * Fix binding element name and handle canonical URI with version

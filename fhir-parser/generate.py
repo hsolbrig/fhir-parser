@@ -1,15 +1,12 @@
-import os
+from argparse import ArgumentParser, ArgumentError
 from types import ModuleType
+from typing import List, Optional
 
 import sys
-from importlib import import_module
-from logger import logger
-
-from argparse import ArgumentParser, ArgumentError
-from typing import List, Optional
 
 import fhirloader
 import fhirspec
+from logger import logger
 
 _cache = 'downloads'
 
