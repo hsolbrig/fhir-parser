@@ -9,6 +9,7 @@ import textwrap
 
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from jinja2.filters import environmentfilter
+
 from fhirparser.logger import logger
 
 
@@ -21,17 +22,26 @@ class FHIRRenderer(object):
         self.settings = self.__class__.cleaned_settings(settings)
         self.jinjaenv = Environment(loader=FileSystemLoader(self.settings.tpl_base))
         self.jinjaenv.filters['wordwrap'] = do_wordwrap
-    
+
+    @staticmethod
+    def rel_to_settings_path(opts, path: str) -> str:
+        """ Return the absolute path of path relative to the settings directory """
+        if os.path.isabs(path):
+            return path
+        return os.path.abspath(os.path.join(opts.settings_dir, path))
+
+    @staticmethod
+    def clean_it(path: str) -> str:
+        return ('/' if path and path[0] == '/' else '') + os.path.join(*path.split('/'))
+
     @classmethod
     def cleaned_settings(cls, settings):
         """ Splits paths at '/' and re-joins them using os.path.join().
         """
-        def clean_it(path: str) -> str:
-            return ('/' if path and path[0] == '/' else '') + os.path.join(*path.split('/'))
-        settings.tpl_base = clean_it(settings.tpl_base)
-        settings.tpl_resource_target = clean_it(settings.tpl_resource_target)
-        settings.tpl_factory_target = clean_it(settings.tpl_factory_target)
-        settings.tpl_unittest_target = clean_it(settings.tpl_unittest_target)
+        settings.tpl_base = cls.clean_it(settings.tpl_base)
+        settings.tpl_resource_target = cls.clean_it(settings.tpl_resource_target)
+        settings.tpl_factory_target = cls.clean_it(settings.tpl_factory_target)
+        settings.tpl_unittest_target = cls.clean_it(settings.tpl_unittest_target)
         return settings
     
     def render(self):
@@ -75,11 +85,13 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
         for origpath, module, contains in self.settings.manual_profiles:
             if not origpath:
                 continue
-            filepath = os.path.join(*origpath.split('/'))
-            if os.path.exists(filepath):
-                tgt = os.path.join(target_dir, os.path.basename(filepath))
-                logger.info("Copying manual profiles in {} to {}".format(os.path.basename(filepath), tgt))
-                shutil.copyfile(filepath, tgt)
+            origpath = self.rel_to_settings_path(self.settings, self.clean_it(origpath))
+            if os.path.exists(origpath):
+                tgt = os.path.join(target_dir, os.path.basename(origpath))
+                logger.info("Copying manual profiles in {} to {}".format(os.path.basename(origpath), tgt))
+                shutil.copyfile(origpath, tgt)
+            else:
+                logger.error(f"Manual profile {origpath} does not exits")
 
     @staticmethod
     def set_forwards(imports, classes) -> None:
@@ -113,7 +125,8 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
             target_name = self.settings.tpl_resource_target_ptrn.format(ptrn)
             target_path = os.path.join(self.settings.tpl_resource_target, target_name)
             self.do_render(data, source_path, target_path)
-        self.copy_files(os.path.dirname(target_path))
+
+        self.copy_files(self.settings.tpl_resource_target)
 
 
 class FHIRFactoryRenderer(FHIRRenderer):

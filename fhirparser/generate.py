@@ -8,6 +8,7 @@ import sys
 from fhirparser import fhirloader
 from fhirparser import fhirspec
 from fhirparser.logger import logger
+from fhirparser.fhirrenderer import FHIRRenderer
 
 _cache = 'downloads'
 
@@ -35,12 +36,6 @@ def genargs() -> ArgumentParser:
 
 
 def generator(args: List[str]) -> Optional[int]:
-    def rel_to_settings_path(opts, path: str) -> str:
-        """ Return the absolute path of path relative to the settings directory """
-        if os.path.isabs(path):
-            return path
-        return os.path.abspath(os.path.join(opts.settings_dir, path))
-
     cwd = os.getcwd()
     opts = genargs().parse_args(args)
     if opts.force and opts.cached:
@@ -52,6 +47,7 @@ def generator(args: List[str]) -> Optional[int]:
     with open(opts.settings) as f:
         settings_py = f.read()
     settings = ModuleType('settings')
+    settings.settings_dir = opts.settings_dir
     exec(settings_py, settings.__dict__)
     if opts.fhirurl:
         settings.specification_url = opts.fhirurl
@@ -59,15 +55,15 @@ def generator(args: List[str]) -> Optional[int]:
     if opts.templatedir:
         settings.tpl_base = opts.templatedir
     else:
-        settings.tpl_base = rel_to_settings_path(opts, settings.tpl_base)
+        settings.tpl_base = FHIRRenderer.rel_to_settings_path(opts, settings.tpl_base)
     logger.info(f"Template directory: {os.path.relpath(settings.tpl_base, cwd)}")
     if opts.outputdir:
         settings.tpl_resource_target = opts.outputdir
     else:
-        settings.tpl_resource_target = rel_to_settings_path(opts, settings.tpl_resource_target)
+        settings.tpl_resource_target = FHIRRenderer.rel_to_settings_path(opts, settings.tpl_resource_target)
     logger.info(f"Output directory: {os.path.relpath(settings.tpl_resource_target, cwd)}")
     if settings.write_unittests:
-        settings.tpl_unittest_target = rel_to_settings_path(opts, settings.tpl_unittest_target)
+        settings.tpl_unittest_target = FHIRRenderer.rel_to_settings_path(opts, settings.tpl_unittest_target)
         logger.info(f"Unit test directory: {os.path.relpath(settings.tpl_unittest_target, cwd)}")
     logger.info(f"Cache directory: {opts.cachedir}")
     loader = fhirloader.FHIRLoader(settings, opts.cachedir)
@@ -77,6 +73,7 @@ def generator(args: List[str]) -> Optional[int]:
         if not opts.parseonly:
             spec.write()
     return 0
+
 
 def main() -> int:
     generator(sys.argv[1:])

@@ -54,7 +54,8 @@ class FHIRClass(object):
         for existing in self.properties:
             if existing.name == prop.name:
                 if 0 == len(existing.reference_to_names):
-                    logger.warninging('Already have property "{}" on "{}", which is only allowed for references'.format(prop.name, self.name))
+                    logger.warning('Already have property "{}" on "{}", which is only allowed for references'.
+                                   format(prop.name, self.name))
                 else:
                     existing.reference_to_names.extend(prop.reference_to_names)
                 return
