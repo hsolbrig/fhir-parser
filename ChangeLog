@@ -1,6 +1,14 @@
 CHANGES
 =======
 
+v0.3.6
+------
+
+* Add nosort option and sort\_resources to settings
+
+v0.3.4
+------
+
 * Fixed logger warning typos
 * Get logger path right
 
