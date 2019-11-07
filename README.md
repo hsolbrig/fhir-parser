@@ -30,9 +30,37 @@ Examples on what you would need to do for Python classes can be found in _Sample
 
 Use
 ---
+1. `pipenv install fhirparser`
+2. `generate [options]` where options are:
+```
+usage: fhirparser [-h] [-f] [-c] [-lo] [-po] [-u FHIRURL] [-td TEMPLATEDIR]
+                  [-o OUTPUTDIR] [-cd CACHEDIR] [--nosort]
+                  settings
 
-1. Add `fhir-parser` as a submodule/subdirectory to the project that will use it
-2. Create the file `mappings.py` in your project, to be copied to fhir-parser root.
+positional arguments:
+  settings              Location of the settings file. Default is settings.py
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f, --force           Force download of the spec
+  -c, --cached          Force use of the cached spec (incompatible with "-f")
+  -lo, --loadonly       Load the spec but do not parse or write resources
+  -po, --parseonly      Load and parse but do not write resources
+  -u FHIRURL, --fhirurl FHIRURL
+                        FHIR Specification URL (overrides
+                        settings.specifications_url)
+  -td TEMPLATEDIR, --templatedir TEMPLATEDIR
+                        Templates base directory (overrides settings.tpl_base)
+  -o OUTPUTDIR, --outputdir OUTPUTDIR
+                        Directory for generated class models. (overrides
+                        settings.tpl_resource_target)
+  -cd CACHEDIR, --cachedir CACHEDIR
+                        Cache directory (default: downloads)
+  --nosort              If set, do not sort resource properties alphabetically
+```
+Use
+---
+1. Create the file `mappings.py` in your project, to be copied to fhir-parser root.
     First, import the default mappings using `from Default.mappings import *` (unless you will define all variables yourself anyway).
     Then adjust your `mappings.py` to your liking by overriding the mappings you wish to change.
 3. Similarly, create the file `settings.py` in your project.
@@ -40,10 +68,6 @@ Use
     Then, import the mappings you have just created with `from mappings import *`.
     The default settings import the default mappings, so you may need to overwrite more keys from _mappings_ than you'd first think.
     You most likely want to change the topmost settings found in the default file, which are determining where the templates can be found and generated classes will be copied to.
-4. Install the generator's requirements by running `pip3` (or `pip`):
-    ```bash
-    pip3 install -r requirements.txt
-    ```
 
 5. Create a script that copies your `mappings.py` and `settings.py` file to the root of `fhir-parser`, _cd_s into `fhir-parser` and then runs `generate.py`.
     The _generate_ script by default wants to use Python _3_, issue `python generate.py` if you don't have Python 3 yet.

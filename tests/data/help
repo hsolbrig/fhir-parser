@@ -1,6 +1,6 @@
-usage: fhir-parser [-h] [-f] [-c] [-lo] [-po] [-u FHIRURL] [-td TEMPLATEDIR]
-                   [-o OUTPUTDIR] [-cd CACHEDIR]
-                   settings
+usage: fhirparser [-h] [-f] [-c] [-lo] [-po] [-u FHIRURL] [-td TEMPLATEDIR]
+                  [-o OUTPUTDIR] [-cd CACHEDIR] [--nosort]
+                  settings
 
 positional arguments:
   settings              Location of the settings file. Default is settings.py
@@ -21,3 +21,4 @@ optional arguments:
                         settings.tpl_resource_target)
   -cd CACHEDIR, --cachedir CACHEDIR
                         Cache directory (default: downloads)
+  --nosort              If set, do not sort resource properties alphabetically

@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import textwrap
+from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from jinja2.filters import environmentfilter
@@ -25,9 +26,9 @@ class FHIRRenderer(object):
         self.jinjaenv.filters['wordwrap'] = do_wordwrap
 
     @staticmethod
-    def rel_to_settings_path(opts, path: str) -> str:
+    def rel_to_settings_path(opts, path: Optional[str]) -> Optional[str]:
         """ Return the absolute path of path relative to the settings directory """
-        if os.path.isabs(path):
+        if path is None or os.path.isabs(path):
             return path
         return os.path.abspath(os.path.join(opts.settings_dir, path))
 
@@ -56,7 +57,7 @@ class FHIRRenderer(object):
         :param target_path: Output path
         """
         try:
-            template = self.jinjaenv.get_template(template_name)
+            template = self.jinjaenv.get_template(os.path.basename(template_name))
         except TemplateNotFound as e:
             logger.error("Template \"{}\" not found in «{}», cannot render"
                 .format(template_name, self.settings.tpl_base))
@@ -88,6 +89,7 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
             if os.path.exists(origpath):
                 tgt = os.path.join(target_dir, os.path.basename(origpath))
                 logger.info("Copying manual profiles in {} to {}".format(os.path.basename(origpath), tgt))
+                os.makedirs(os.path.dirname(tgt), exist_ok=True)
                 shutil.copyfile(origpath, tgt)
             else:
                 logger.error(f"Manual profile {origpath} does not exits")
@@ -241,7 +243,7 @@ def do_wordwrap(environment, s, width=79, break_long_words=True, wrapstring=None
     # Workaround: pre-split the string on \r, \r\n and \n
     for component in re.split(r"\r\n|\n|\r", s):
         # textwrap will eat empty strings for breakfirst. Therefore we route them around it.
-        if len(component) is 0:
+        if len(component) == 0:
             accumulator.append(component)
             continue
         accumulator.extend(

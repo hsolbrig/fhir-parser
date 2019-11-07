@@ -12,6 +12,21 @@ from fhirparser.fhirrenderer import FHIRRenderer
 
 _cache = 'downloads'
 
+# Settings attributes that are relative to location of settings file and opts override if exists
+relative_settings_paths = [
+    ('tpl_base', 'templatedir'),
+    ('tpl_resource_target', 'outputdir'),
+    ('tpl_resource_source', None),
+    ('tpl_codesystems_source', None),
+    ('tpl_factory_source', None),
+    ('tpl_factory_target', None),
+    ('tpl_dependencies_source', None),
+    ('tpl_dependencies_target', None),
+    ('tpl_unittest_source', None),
+    ('tpl_unittest_target', None)
+]
+
+
 def genargs() -> ArgumentParser:
     """
     Create a command line parser
@@ -36,11 +51,21 @@ def genargs() -> ArgumentParser:
     return parser
 
 
+def adjust_source_target_paths(settings, opts):
+    for settings_parm, opts_parm in relative_settings_paths:
+        if opts_parm and getattr(opts, opts_parm):
+            setattr(settings, settings_parm, getattr(opts, opts_parm))
+        else:
+            setattr(settings, settings_parm, FHIRRenderer.rel_to_settings_path(opts, getattr(settings, settings_parm)))
+
+
 def generator(args: List[str]) -> Optional[int]:
     cwd = os.getcwd()
     opts = genargs().parse_args(args)
     if opts.force and opts.cached:
         raise ArgumentError('force and cached options cannot both be true')
+    
+    # Load the settings
     if os.path.isdir(opts.settings):
         opts.settings = os.path.join(opts.settings, 'settings.py')
     opts.settings_dir = os.path.abspath(os.path.dirname(opts.settings))
@@ -51,6 +76,8 @@ def generator(args: List[str]) -> Optional[int]:
     exec(settings_py, settings.__dict__)
 
     settings.settings_dir = opts.settings_dir
+    
+    # Sort option -- default if not in the settings directory
     if opts.nosort:
         settings.sort_resources = False
     elif getattr(settings, "sort_resources", None) is None:
@@ -61,19 +88,12 @@ def generator(args: List[str]) -> Optional[int]:
         logger.info("Resource properties are not sorted")
     if opts.fhirurl:
         settings.specification_url = opts.fhirurl
+
+    adjust_source_target_paths(settings, opts)
     logger.info(f"Specification: {settings.specification_url}")
-    if opts.templatedir:
-        settings.tpl_base = opts.templatedir
-    else:
-        settings.tpl_base = FHIRRenderer.rel_to_settings_path(opts, settings.tpl_base)
     logger.info(f"Template directory: {os.path.relpath(settings.tpl_base, cwd)}")
-    if opts.outputdir:
-        settings.tpl_resource_target = opts.outputdir
-    else:
-        settings.tpl_resource_target = FHIRRenderer.rel_to_settings_path(opts, settings.tpl_resource_target)
     logger.info(f"Output directory: {os.path.relpath(settings.tpl_resource_target, cwd)}")
     if settings.write_unittests:
-        settings.tpl_unittest_target = FHIRRenderer.rel_to_settings_path(opts, settings.tpl_unittest_target)
         logger.info(f"Unit test directory: {os.path.relpath(settings.tpl_unittest_target, cwd)}")
     logger.info(f"Cache directory: {opts.cachedir}")
     loader = fhirloader.FHIRLoader(settings, opts.cachedir)
