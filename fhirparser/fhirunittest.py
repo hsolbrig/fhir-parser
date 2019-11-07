@@ -5,7 +5,7 @@ import io
 import json
 import os.path
 
-import fhirclass
+from fhirparser import fhirclass
 from logger import logger
 
 

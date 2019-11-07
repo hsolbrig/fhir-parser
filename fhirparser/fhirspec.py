@@ -9,9 +9,9 @@ import json
 import datetime
 
 from logger import logger
-import fhirclass
-from tests import fhirunittest
-import fhirrenderer
+from fhirparser import fhirclass
+from fhirparser import fhirunittest
+from fhirparser import fhirrenderer
 
 # allow to skip some profiles by matching against their url (used while WiP)
 skip_because_unsupported = [

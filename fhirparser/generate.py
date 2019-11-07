@@ -1,11 +1,12 @@
+import os
 from argparse import ArgumentParser, ArgumentError
 from types import ModuleType
 from typing import List, Optional
 
 import sys
 
-import fhirloader
-import fhirspec
+from fhirparser import fhirloader
+from fhirparser import fhirspec
 from logger import logger
 
 _cache = 'downloads'
@@ -34,9 +35,19 @@ def genargs() -> ArgumentParser:
 
 
 def generator(args: List[str]) -> Optional[int]:
+    def rel_to_settings_path(opts, path: str) -> str:
+        """ Return the absolute path of path relative to the settings directory """
+        if os.path.isabs(path):
+            return path
+        return os.path.abspath(os.path.join(opts.settings_dir, path))
+
+    cwd = os.getcwd()
     opts = genargs().parse_args(args)
     if opts.force and opts.cached:
         raise ArgumentError('force and cached options cannot both be true')
+    if os.path.isdir(opts.settings):
+        opts.settings = os.path.join(opts.settings, 'settings.py')
+    opts.settings_dir = os.path.abspath(os.path.dirname(opts.settings))
     logger.info(f"Loading settings from {opts.settings}")
     with open(opts.settings) as f:
         settings_py = f.read()
@@ -47,12 +58,18 @@ def generator(args: List[str]) -> Optional[int]:
     logger.info(f"Specification: {settings.specification_url}")
     if opts.templatedir:
         settings.tpl_base = opts.templatedir
-    logger.info(f"Template directory: {settings.tpl_base}")
+    else:
+        settings.tpl_base = rel_to_settings_path(opts, settings.tpl_base)
+    logger.info(f"Template directory: {os.path.relpath(settings.tpl_base, cwd)}")
     if opts.outputdir:
         settings.tpl_resource_target = opts.outputdir
-    logger.info(f"Output directory: {settings.tpl_resource_target}")
+    else:
+        settings.tpl_resource_target = rel_to_settings_path(opts, settings.tpl_resource_target)
+    logger.info(f"Output directory: {os.path.relpath(settings.tpl_resource_target, cwd)}")
+    if settings.write_unittests:
+        settings.tpl_unittest_target = rel_to_settings_path(opts, settings.tpl_unittest_target)
+        logger.info(f"Unit test directory: {os.path.relpath(settings.tpl_unittest_target, cwd)}")
     logger.info(f"Cache directory: {opts.cachedir}")
-
     loader = fhirloader.FHIRLoader(settings, opts.cachedir)
     spec_source = loader.load(force_download=opts.force, force_cache= opts.cached)
     if not opts.loadonly:
@@ -61,6 +78,8 @@ def generator(args: List[str]) -> Optional[int]:
             spec.write()
     return 0
 
+def main() -> int:
+    generator(sys.argv[1:])
 
 if '__main__' == __name__:
-    sys.exit(generator(sys.argv[1:]))
+    sys.exit(main())

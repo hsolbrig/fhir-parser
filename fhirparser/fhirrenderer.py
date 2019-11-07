@@ -32,7 +32,6 @@ class FHIRRenderer(object):
         settings.tpl_resource_target = clean_it(settings.tpl_resource_target)
         settings.tpl_factory_target = clean_it(settings.tpl_factory_target)
         settings.tpl_unittest_target = clean_it(settings.tpl_unittest_target)
-        settings.tpl_resource_target = clean_it(settings.tpl_resource_target)
         return settings
     
     def render(self):

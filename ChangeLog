@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+v0.2.5
+------
+
+* Removed dash from python directory name
+
 v0.2.1
 ------
 
