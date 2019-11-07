@@ -7,7 +7,7 @@ import sys
 
 from fhirparser import fhirloader
 from fhirparser import fhirspec
-from logger import logger
+from fhirparser.logger import logger
 
 _cache = 'downloads'
 

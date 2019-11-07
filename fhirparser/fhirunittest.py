@@ -6,7 +6,7 @@ import json
 import os.path
 
 from fhirparser import fhirclass
-from logger import logger
+from fhirparser.logger import logger
 
 
 class FHIRUnitTestController(object):

@@ -9,7 +9,7 @@ import textwrap
 
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from jinja2.filters import environmentfilter
-from logger import logger
+from fhirparser.logger import logger
 
 
 class FHIRRenderer(object):

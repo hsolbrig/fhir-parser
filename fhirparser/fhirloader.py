@@ -3,7 +3,7 @@
 
 import io
 import os.path
-from logger import logger
+from fhirparser.logger import logger
 
 
 class FHIRLoader(object):

@@ -8,7 +8,7 @@ import sys
 import json
 import datetime
 
-from logger import logger
+from fhirparser.logger import logger
 from fhirparser import fhirclass
 from fhirparser import fhirunittest
 from fhirparser import fhirrenderer
