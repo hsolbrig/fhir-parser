@@ -108,3 +108,4 @@ venv.bak/
 
 # test cache
 tests/cache/
+tests/model/
