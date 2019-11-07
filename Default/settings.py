@@ -13,6 +13,9 @@ specification_url = 'http://hl7.org/fhir/2018May/'
 # In which directory to find the templates. See below for settings that start with `tpl_`: these are the template names.
 tpl_base = 'Sample'
 
+# Sort resource attributes
+sort_resources = True
+
 # Whether and where to put the generated class models
 write_resources = True
 tpl_resource_source = 'template-resource.py'          # the template to use as source when writing resource implementations for profiles

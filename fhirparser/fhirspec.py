@@ -33,7 +33,7 @@ class FHIRSpec(object):
         self.codesystems = {}           # system-url: FHIRCodeSystem()
         self.profiles = {}              # profile-name: FHIRStructureDefinition()
         self.unit_tests = None          # FHIRUnitTestCollection()
-        
+
         self.prepare()
         self.read_profiles()
         self.finalize()
@@ -104,7 +104,7 @@ class FHIRSpec(object):
         
         # create profile instances
         for resource in resources:
-            profile = FHIRStructureDefinition(self, resource)
+            profile = FHIRStructureDefinition(self, resource, self.settings.sort_resources)
             for pattern in skip_because_unsupported:
                 if re.search(pattern, profile.url) is not None:
                     logger.info('Skipping "{}"'.format(resource['url']))
@@ -130,7 +130,7 @@ class FHIRSpec(object):
         """
         for filepath, module, contains in self.settings.manual_profiles:
             for contained in contains:
-                profile = FHIRStructureDefinition(self, None)
+                profile = FHIRStructureDefinition(self, None, self.settings.sort_resources)
                 profile.manual_module = module
                 
                 prof_dict = {
@@ -398,7 +398,7 @@ class FHIRStructureDefinition(object):
     """ One FHIR structure definition.
     """
     
-    def __init__(self, spec, profile):
+    def __init__(self, spec, profile, sort_resources: bool = True):
         self.manual_module = None
         self.spec = spec
         self.url = None
@@ -409,6 +409,7 @@ class FHIRStructureDefinition(object):
         self._class_map = {}
         self.classes = []
         self._did_finalize = False
+        self._sort_resources = sort_resources
         
         if profile is not None:
             self.parse_profile(profile)
@@ -470,7 +471,7 @@ class FHIRStructureDefinition(object):
         
         # create classes and class properties
         if self.main_element is not None:
-            snap_class, subs = self.main_element.create_class()
+            snap_class, subs = self.main_element.create_class(sort_resources=self._sort_resources)
             if snap_class is None:
                 raise Exception('The main element for "{}" did not create a class'
                     .format(self.url))
@@ -678,7 +679,7 @@ class FHIRStructureDefinitionElement(object):
         else:
             self.children.append(element)
     
-    def create_class(self, module=None):
+    def create_class(self, module=None, sort_resources: bool = True):
         """ Creates a FHIRClass instance from the receiver, returning the
         created class as the first and all inline defined subclasses as the
         second item in the tuple.
@@ -706,7 +707,7 @@ class FHIRStructureDefinitionElement(object):
                 if properties is not None:
                     
                     # collect subclasses
-                    sub, subsubs = child.create_class(module)
+                    sub, subsubs = child.create_class(module, sort_resources=sort_resources)
                     if subsubs:
                         subs.extend(subsubs)
                     if sub is not None:
@@ -715,7 +716,7 @@ class FHIRStructureDefinitionElement(object):
                     # add properties to class
                     if did_create:
                         for prop in properties:
-                            cls.add_property(prop)
+                            cls.add_property(prop, sort_resources)
         
         return cls, subs
     

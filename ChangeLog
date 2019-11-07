@@ -1,6 +1,9 @@
 CHANGES
 =======
 
+* Fixed logger warning typos
+* Get logger path right
+
 v0.3.2
 ------
 

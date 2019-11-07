@@ -41,7 +41,7 @@ class FHIRClass(object):
         self.properties = []
         self.expanded_nonoptionals = {}
     
-    def add_property(self, prop):
+    def add_property(self, prop, sort_resources: bool=True):
         """ Add a property to the receiver.
         
         :param FHIRClassProperty prop: A FHIRClassProperty instance
@@ -61,7 +61,8 @@ class FHIRClass(object):
                 return
         
         self.properties.append(prop)
-        self.properties = self.properties
+        if sort_resources:
+            self.properties.sort(key=lambda x: x.name)
         
         if prop.nonoptional and prop.one_of_many is not None:
             if prop.one_of_many in self.expanded_nonoptionals:

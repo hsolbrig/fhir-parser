@@ -32,6 +32,7 @@ def genargs() -> ArgumentParser:
     parser.add_argument("-o", "--outputdir",
                         help = "Directory for generated class models. (overrides settings.tpl_resource_target)")
     parser.add_argument("-cd", "--cachedir", help = f"Cache directory (default: {_cache})", default=_cache)
+    parser.add_argument("--nosort", help="If set, do not sort resource properties alphabetically", action="store_true")
     return parser
 
 
@@ -47,8 +48,17 @@ def generator(args: List[str]) -> Optional[int]:
     with open(opts.settings) as f:
         settings_py = f.read()
     settings = ModuleType('settings')
-    settings.settings_dir = opts.settings_dir
     exec(settings_py, settings.__dict__)
+
+    settings.settings_dir = opts.settings_dir
+    if opts.nosort:
+        settings.sort_resources = False
+    elif getattr(settings, "sort_resources", None) is None:
+        settings.sort_resources = True
+    if settings.sort_resources:
+        logger.info("Sorting resource properties")
+    else:
+        logger.info("Resource properties are not sorted")
     if opts.fhirurl:
         settings.specification_url = opts.fhirurl
     logger.info(f"Specification: {settings.specification_url}")

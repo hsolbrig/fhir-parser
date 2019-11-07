@@ -19,7 +19,8 @@ class FHIRRenderer(object):
     
     def __init__(self, spec, settings):
         self.spec = spec
-        self.settings = self.__class__.cleaned_settings(settings)
+        self.settings = settings
+        self.clean_settings()
         self.jinjaenv = Environment(loader=FileSystemLoader(self.settings.tpl_base))
         self.jinjaenv.filters['wordwrap'] = do_wordwrap
 
@@ -34,15 +35,13 @@ class FHIRRenderer(object):
     def clean_it(path: str) -> str:
         return ('/' if path and path[0] == '/' else '') + os.path.join(*path.split('/'))
 
-    @classmethod
-    def cleaned_settings(cls, settings):
+    def clean_settings(self) -> None:
         """ Splits paths at '/' and re-joins them using os.path.join().
         """
-        settings.tpl_base = cls.clean_it(settings.tpl_base)
-        settings.tpl_resource_target = cls.clean_it(settings.tpl_resource_target)
-        settings.tpl_factory_target = cls.clean_it(settings.tpl_factory_target)
-        settings.tpl_unittest_target = cls.clean_it(settings.tpl_unittest_target)
-        return settings
+        self.settings.tpl_base = self.clean_it(self.settings.tpl_base)
+        self.settings.tpl_resource_target = self.clean_it(self.settings.tpl_resource_target)
+        self.settings.tpl_factory_target = self.clean_it(self.settings.tpl_factory_target)
+        self.settings.tpl_unittest_target = self.clean_it(self.settings.tpl_unittest_target)
     
     def render(self):
         """ The main rendering start point, for subclasses to override.
@@ -106,6 +105,8 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
     def render(self):
         for profile in self.spec.writable_profiles():
             classes = profile.writable_classes()
+            if self.settings.sort_resources:
+                classes = sorted(classes, key=lambda x: x.name)
             if 0 == len(classes):
                 if profile.url is not None:        # manual profiles have no url and usually write no classes
                     logger.info('Profile "{}" returns zero writable classes, skipping'.format(profile.url))
@@ -139,7 +140,7 @@ class FHIRFactoryRenderer(FHIRRenderer):
         
         data = {
             'info': self.spec.info,
-            'classes': classes,
+            'classes': sorted(classes, key=lambda x: x.name) if self.settings.sort_resources else classes,
         }
         self.do_render(data, self.settings.tpl_factory_source, self.settings.tpl_factory_target)
 
@@ -160,7 +161,7 @@ class FHIRDependencyRenderer(FHIRRenderer):
                 'imports': profile.needed_external_classes(),
                 'references': profile.referenced_classes(),
             })
-        data['resources'] = resources
+        data['resources'] = sorted(resources, key=lambda x: x['name']) if self.settings.sort_resources else resources
         self.do_render(data, self.settings.tpl_dependencies_source, self.settings.tpl_dependencies_target)
 
 
@@ -175,7 +176,7 @@ class FHIRValueSetRenderer(FHIRRenderer):
         systems = [v for k,v in self.spec.codesystems.items()]
         data = {
             'info': self.spec.info,
-            'systems': systems,
+            'systems': sorted(systems, key=lambda x: x.name) if self.settings.sort_resources else systems,
         }
         target_name = self.settings.tpl_codesystems_target_name
         target_path = os.path.join(self.settings.tpl_resource_target, target_name)
