@@ -21,6 +21,7 @@ class FHIRRenderer(object):
     def __init__(self, spec, settings):
         self.spec = spec
         self.settings = settings
+        self.clean_settings()
         self.jinjaenv = Environment(loader=FileSystemLoader(self.settings.tpl_base))
         self.jinjaenv.filters['wordwrap'] = do_wordwrap
 
@@ -34,6 +35,14 @@ class FHIRRenderer(object):
     @staticmethod
     def clean_it(path: str) -> str:
         return ('/' if path and path[0] == '/' else '') + os.path.join(*path.split('/'))
+
+    def clean_settings(self) -> None:
+        """ Splits paths at '/' and re-joins them using os.path.join().
+        """
+        self.settings.tpl_base = self.clean_it(self.settings.tpl_base)
+        self.settings.tpl_resource_target = self.clean_it(self.settings.tpl_resource_target)
+        self.settings.tpl_factory_target = self.clean_it(self.settings.tpl_factory_target)
+        self.settings.tpl_unittest_target = self.clean_it(self.settings.tpl_unittest_target)
     
     def render(self):
         """ The main rendering start point, for subclasses to override.
@@ -47,7 +56,6 @@ class FHIRRenderer(object):
         :param template_name: The Jinja2 template to render, located in settings.tpl_base
         :param target_path: Output path
         """
-        self.settings.tpl_base = self.rel_to_settings_path(self.settings, self.clean_it(self.settings.tpl_base))
         try:
             template = self.jinjaenv.get_template(os.path.basename(template_name))
         except TemplateNotFound as e:
@@ -97,8 +105,6 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
             seen.append(c.name)
     
     def render(self):
-        self.settings.tpl_resource_target = self.rel_to_settings_path(self.settings,
-                                                                      self.clean_it(self.settings.tpl_resource_target))
         for profile in self.spec.writable_profiles():
             classes = profile.writable_classes()
             if self.settings.sort_resources:
@@ -130,8 +136,6 @@ class FHIRFactoryRenderer(FHIRRenderer):
     """ Write factories for FHIR classes.
     """
     def render(self):
-        self.settings.tpl_factory_target = self.rel_to_settings_path(self.settings,
-                                                                     self.clean_it(self.settings.tpl_factory_target))
         classes = []
         for profile in self.spec.writable_profiles():
             classes.extend(profile.writable_classes())
@@ -187,9 +191,7 @@ class FHIRUnitTestRenderer(FHIRRenderer):
     def render(self):
         if self.spec.unit_tests is None:
             return
-
-        self.settings.tpl_unittest_target = self.rel_to_settings_path(self.settings,
-                                                                      self.clean_it(self.settings.tpl_unittest_target))
+        
         # render all unit test collections
         for coll in self.spec.unit_tests:
             data = {
@@ -232,7 +234,7 @@ def do_wordwrap(environment, s, width=79, break_long_words=True, wrapstring=None
     split words apart if they are longer than `width`.
     """
     if not s:
-    	return s
+        return s
     
     if not wrapstring:
         wrapstring = environment.newline_sequence
