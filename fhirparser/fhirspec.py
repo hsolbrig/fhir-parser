@@ -4,6 +4,8 @@
 import io
 import os
 import re
+from typing import Optional
+
 import sys
 import json
 import datetime
@@ -271,7 +273,7 @@ class FHIRVersionInfo(object):
     """ The version of a FHIR specification.
     """
     
-    def __init__(self, spec, directory):
+    def __init__(self, spec: Optional[FHIRSpec], directory: str):
         self.spec = spec
         
         now = datetime.date.today()

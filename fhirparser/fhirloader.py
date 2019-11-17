@@ -31,13 +31,26 @@ class FHIRLoader(object):
         """
         if self.force_download: assert not self.force_cache
 
+        # If we're not forcing anything, see whether our cached version matches what is on the server
+        version_path = os.path.join(self.cache, 'version.info')
+        if not (self.force_download or self.force_cache):
+            from fhirparser.fhirspec import FHIRVersionInfo
+            cached_version = FHIRVersionInfo(None, self.cache) \
+                if not self.force_cache and os.path.exists(version_path) else None
+            self.download('version.info')
+            server_version = FHIRVersionInfo(None, self.cache)
+            if cached_version.version != server_version.version:
+                logger.info(f"Server version ({server_version.version}) "
+                            f"doesn't match cache ({cached_version.version}) - Reloading cache")
+                self.force_download = True
+
         if os.path.isdir(self.cache) and self.force_download:
             import shutil
             shutil.rmtree(self.cache)
-        
+
         if not os.path.isdir(self.cache):
             os.mkdir(self.cache)
-        
+
         # check all files and download if missing
         uses_cache = False
         for local, remote in self.__class__.needs.items():

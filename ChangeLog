@@ -1,6 +1,10 @@
 CHANGES
 =======
 
+v0.3.9
+------
+
+* Attempt to load files not in the zip file directly from the fhir server
 * Version 0.3.8
 
 v0.3.8
