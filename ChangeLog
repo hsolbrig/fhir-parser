@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+v0.3.8
+------
+
+* Undo last renderer change -- issue was a pypi version
+
 v0.3.7
 ------
 
