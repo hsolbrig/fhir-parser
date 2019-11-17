@@ -17,19 +17,21 @@ class FHIRLoader(object):
         'profiles-resources.json': 'examples-json.zip',
     }
     
-    def __init__(self, settings, cache):
+    def __init__(self, settings, cache, force_download: bool, force_cache: bool):
         self.settings = settings
         self.base_url = settings.specification_url
         self.cache = cache
+        self.force_download = force_download
+        self.force_cache = force_cache
     
-    def load(self, force_download=False, force_cache=False):
+    def load(self):
         """ Makes sure all the files needed have been downloaded.
         
         :returns: The path to the directory with all our files.
         """
-        if force_download: assert not force_cache
+        if self.force_download: assert not self.force_cache
 
-        if os.path.isdir(self.cache) and force_download:
+        if os.path.isdir(self.cache) and self.force_download:
             import shutil
             shutil.rmtree(self.cache)
         
@@ -42,7 +44,7 @@ class FHIRLoader(object):
             path = os.path.join(self.cache, local)
             
             if not os.path.exists(path):
-                if force_cache:
+                if self.force_cache:
                     raise Exception('Resource missing from cache: {}'.format(local))
                 logger.info('Downloading {}'.format(remote))
                 filename = self.download(remote)

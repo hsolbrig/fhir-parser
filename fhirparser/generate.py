@@ -96,10 +96,10 @@ def generator(args: List[str]) -> Optional[int]:
     if settings.write_unittests:
         logger.info(f"Unit test directory: {os.path.relpath(settings.tpl_unittest_target, cwd)}")
     logger.info(f"Cache directory: {opts.cachedir}")
-    loader = fhirloader.FHIRLoader(settings, opts.cachedir)
-    spec_source = loader.load(force_download=opts.force, force_cache= opts.cached)
+    loader = fhirloader.FHIRLoader(settings, opts.cachedir, force_download=opts.force, force_cache= opts.cached)
+    spec_source = loader.load()
     if not opts.loadonly:
-        spec = fhirspec.FHIRSpec(spec_source, settings)
+        spec = fhirspec.FHIRSpec(spec_source, settings, loader)
         if not opts.parseonly:
             spec.write()
     return 0

@@ -8,6 +8,7 @@ import sys
 import json
 import datetime
 
+from fhirparser.fhirloader import FHIRLoader
 from fhirparser.logger import logger
 from fhirparser import fhirclass
 from fhirparser import fhirunittest
@@ -23,11 +24,12 @@ class FHIRSpec(object):
     """ The FHIR specification.
     """
     
-    def __init__(self, directory, settings):
+    def __init__(self, directory, settings, loader: FHIRLoader):
         assert os.path.isdir(directory)
         assert settings is not None
         self.directory = directory
         self.settings = settings
+        self.loader = loader
         self.info = FHIRVersionInfo(self, directory)
         self.valuesets = {}             # system-url: FHIRValueSet()
         self.codesystems = {}           # system-url: FHIRCodeSystem()
@@ -49,6 +51,11 @@ class FHIRSpec(object):
         """
         logger.info("Reading {}".format(filename))
         filepath = os.path.join(self.directory, filename)
+        if not os.path.exists(filepath) and not self.loader.force_cache:
+            self.loader.download(filename)
+        if not os.path.exists(filepath):
+            raise Exception('Resource missing from cache: {}'.format(filename))
+
         with io.open(filepath, encoding='utf-8') as handle:
             parsed = json.load(handle)
             if 'resourceType' not in parsed:
