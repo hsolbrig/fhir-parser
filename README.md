@@ -1,15 +1,21 @@
 Python FHIR Parser
 ==================
+[![Pyversions](https://img.shields.io/pypi/pyversions/fhirparser.svg)](https://pypi.python.org/pypi/fhirparser)
+
+[![PyPi](https://img.shields.io/pypi/v/fhirparser.svg)](https://pypi.python.org/pypi/fhirparser)
 
 A Python FHIR specification parser for model class generation.
 If you've come here because you want _Swift_ or _Python_ classes for FHIR data models, look at our client libraries instead:
 
 - [Swift-FHIR][] and [Swift-SMART][]
 - Python [client-py][]
+- [fhir_model_generator][]
 
-The `master` branch is currently capable of parsing _STU 3, v3.0.0_.  
-The `develop` branch should be capable of parsing the continuous integration build and will be merged into master on new major FHIR releases.
-There may be tags for specific freezes, see [releases](https://github.com/smart-on-fhir/fhir-parser/releases).
+This fork is currently capable of parsing [R4] and the latest [R5] builds.  
+We are still working on issues with earlier versions -- stay posted.
+The `master` branch is currently capable of parsing _STU3_ and _DSTU2_, but it doesn't generate any test code because
+the needed examples are not included in _examples-json.zip_.
+There may be tags for specific freezes, see [releases](https://github.com/hsolbrig/fhir-parser/releases).
 
 This work is licensed under the [APACHE license][license].
 FHIR® is the registered trademark of [HL7][] and is used with the permission of HL7.
@@ -17,8 +23,15 @@ FHIR® is the registered trademark of [HL7][] and is used with the permission of
 
 Tech
 ----
+The _generate.py_ script downloads the following files from the URL supplied on the command line, or, if none, the
+ `specification_url` named in _settings.py_.
+ - _version.info_ - used to get identifying information about the build, version and the like
+ - _examples-json.zip_ - contains _profiles-resources.json_ as well as (theoretically), all of the FHIR resource examples. 
+ ("Theoretially" because there are no examples in the STU3 zip file (?))
+ 
 
-The _generate.py_ script downloads [FHIR specification][fhir] files, parses the profiles (using _fhirspec.py_) and represents them as `FHIRClass` instances with `FHIRClassProperty` properties (found in _fhirclass.py_).
+The _generate.py_ script downloads [FHIR specification][fhir] files, parses the profiles (using _fhirspec.py_) and 
+represents them as `FHIRClass` instances with `FHIRClassProperty` properties (found in _fhirclass.py_).
 Additionally, `FHIRUnitTest` (in _fhirunittest.py_) instances get created that can generate unit tests from provided FHIR examples.
 These representations are then used by [Jinja][] templates to create classes in certain programming languages, mentioned below.
 
@@ -63,7 +76,8 @@ Use
 1. Create the file `mappings.py` in your project, to be copied to fhir-parser root.
     First, import the default mappings using `from Default.mappings import *` (unless you will define all variables yourself anyway).
     Then adjust your `mappings.py` to your liking by overriding the mappings you wish to change.
-3. Similarly, create the file `settings.py` in your project.
+    
+3. Similarly, create the file `settings.py` in your project, using the [Default settings]
     First, import the default settings using `from Default.settings import *` and override any settings you want to change.
     Then, import the mappings you have just created with `from mappings import *`.
     The default settings import the default mappings, so you may need to overwrite more keys from _mappings_ than you'd first think.
@@ -87,6 +101,7 @@ To get a sense of how to use _fhir-parser_, take a look at these libraries:
 
 - [**Swift-FHIR**][swift-fhir]
 - [**fhirclient**][client-py]
+- [fhir_model_generator][]
 
 
 Tech Details
@@ -116,3 +131,6 @@ The class of this property is derived from `element.type`, which is expected to 
 [swift-fhir]: https://github.com/smart-on-fhir/Swift-FHIR
 [swift-smart]: https://github.com/smart-on-fhir/Swift-SMART
 [client-py]: https://github.com/smart-on-fhir/client-py
+[fhir_model_generator]: https://github.com/hsolbrig/fhir_model_generator
+[R4]: http://hl7.org/fhir/R4
+[R5]: http://build.fhir.org/R5
